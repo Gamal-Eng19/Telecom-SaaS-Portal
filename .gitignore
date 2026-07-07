@@ -1,0 +1,8 @@
+# .NET Core
+Backend/bin/
+Backend/obj/
+
+# React
+Frontend/node_modules/
+Frontend/build/
+.env
