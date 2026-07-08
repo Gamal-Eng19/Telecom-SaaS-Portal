@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using TelecomProject.Data;
+using TelecomProject.Backend.Services; 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. تفعيل الـ Controllers
-builder.Services.AddControllers();
+// 1. تفعيل الـ Controllers ومنع مشكلة الـ Circular Reference
+builder.Services.AddControllers()
+    .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 
-// 2. ربط الـ AppDbContext بقاعدة بيانات SQL Server
+// 2. ربط الـ AppDbContext بقاعدة بيانات PostgreSQL (Supabase)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -26,14 +28,16 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+
+// تسجيل الـ CustomerService
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

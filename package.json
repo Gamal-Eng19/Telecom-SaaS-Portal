@@ -1,0 +1,23 @@
+{
+  "name": "telecomproject",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"cd Backend && dotnet run\" \"cd views && npm run dev\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gamal-Eng19/Telecom-SaaS-Portal.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gamal-Eng19/Telecom-SaaS-Portal/issues"
+  },
+  "homepage": "https://github.com/Gamal-Eng19/Telecom-SaaS-Portal#readme",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
