@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
-using TelecomProject.Data;
-using TelecomProject.Models;
-using TelecomProject.DTOs; // تأكد من المسار ده
+using TelecomProject.Backend.Services;
+using TelecomProject.DTOs;
 
 namespace TelecomProject.Backend.Controllers
 {
@@ -12,80 +10,59 @@ namespace TelecomProject.Backend.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IOrderService _orderService;
 
-        public OrdersController(AppDbContext context)
+        public OrdersController(IOrderService orderService)
         {
-            _context = context;
+            _orderService = orderService;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetOrders()
         {
-            var orders = await _context.Orders
-                .Include(o => o.Customer) 
-                .Include(o => o.Product)  
-                .ToListAsync();
+            var orders = await _orderService.GetOrdersAsync();
             return Ok(orders);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetOrder(int id)
         {
-            var order = await _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.Product)
-                .FirstOrDefaultAsync(o => o.Id == id);
-
+            var order = await _orderService.GetOrderByIdAsync(id);
             if (order == null) return NotFound("Order not found");
+            
             return Ok(order);
         }
 
-       [HttpPost]
-public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDto dto)
-{
-    // نتأكد إن العميل والمنتج موجودين قبل ما نعمل Order
-    var customerExists = await _context.Customers.AnyAsync(c => c.Id == dto.CustomerId);
-    var productExists = await _context.Products.AnyAsync(p => p.Id == dto.ProductId);
-
-    if (!customerExists || !productExists) 
-        return BadRequest("Customer or Product does not exist.");
-
-    var order = new Order
-    {
-        CustomerId = dto.CustomerId,
-        ProductId = dto.ProductId,
-        OrderDate = DateTime.UtcNow,
-        Status = "Pending"
-    };
-
-    _context.Orders.Add(order);
-    await _context.SaveChangesAsync();
-    
-    return Ok(order);
-}
+        [HttpPost]
+        public async Task<IActionResult> CreateOrder([FromBody] OrderCreateDto dto)
+        {
+            try
+            {
+                var order = await _orderService.CreateOrderAsync(dto);
+                return Ok(order); // هترجع الـ OrderResponseDto بالأسماء
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateOrder(int id, [FromBody] OrderUpdateDto dto)
         {
-            var existingOrder = await _context.Orders.FindAsync(id);
-            if (existingOrder == null) return NotFound("Order not found");
+            var success = await _orderService.UpdateOrderStatusAsync(id, dto);
+            if (!success) return NotFound("Order not found");
 
-            existingOrder.Status = dto.Status;
-            
-            await _context.SaveChangesAsync();
-            return Ok(existingOrder);
+            return Ok(new { message = "Order status updated successfully" });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null) return NotFound("Order not found");
+            var success = await _orderService.DeleteOrderAsync(id);
+            if (!success) return NotFound("Order not found");
 
-            _context.Orders.Remove(order);
-            await _context.SaveChangesAsync();
-            return Ok("Order Deleted");
+            return Ok(new { message = "Order Deleted Successfully" });
         }
     }
 }

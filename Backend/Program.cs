@@ -33,6 +33,10 @@ builder.Services.AddSwaggerGen();
 // تسجيل الـ CustomerService
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 
+// تسجيل الـ OrderService
+builder.Services.AddScoped<IOrderService, OrderService>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
