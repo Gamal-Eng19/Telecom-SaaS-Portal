@@ -6,7 +6,7 @@ namespace TelecomProject.Models
     {
         public int Id { get; set; }
         public DateTime OrderDate { get; set; } = DateTime.Now;
-        public string Status { get; set; } // Pending, Active, Cancelled
+        public string Status { get; set; } // Pending, Active, Cancelled    //enum
 
 
         public int CustomerId { get; set; }
