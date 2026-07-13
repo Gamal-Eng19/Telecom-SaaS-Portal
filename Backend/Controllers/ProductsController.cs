@@ -12,6 +12,13 @@ namespace TelecomProject.Backend.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly AppDbContext _context;
+       // search bar
+        [HttpGet("search")]
+        public IActionResult Search(string keyword)
+        {
+            var results = _productService.SearchProducts(keyword);
+            return Ok(results);
+        }
 
         public ProductsController(AppDbContext context)
         {
