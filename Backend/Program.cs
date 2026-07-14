@@ -22,7 +22,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp", policy =>
     {
         // حطينا بورت 3000 و 5173 عشان دول أشهر بورتات لـ React و Vite
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173") 
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
