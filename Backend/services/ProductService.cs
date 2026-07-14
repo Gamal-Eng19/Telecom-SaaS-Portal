@@ -1,59 +1,86 @@
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using Backend.Models;
+using System.Threading.Tasks;
+using TelecomProject.Data; // مسار الداتا بيز
+using TelecomProject.Models;
+using TelecomProject.DTOs; // مسار الـ DTOs
 
-namespace Backend.services
+namespace TelecomProject.services // تأكد إن الاسم ده نفس اللي في مشروعك
 {
-	public class ProductService
-	{
-		private readonly List<Product> _products;
+    public class ProductService
+    {
+        private readonly AppDbContext _context;
 
-		public ProductService()
-		{
-			_products = new List<Product>();
-		}
-	//search bar
-		public List<Product> SearchProducts(string keyword)
-		{
-			return _products
-				.Where(p => p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-				.ToList();
-		}
-		public void AddProduct(Product product)
-		{
-			_products.Add(product);
-		}
+        public ProductService(AppDbContext context)
+        {
+            _context = context;
+        }
 
-		
-		public List<Product> GetAllProducts()
-		{
-			return _products;
-		}
+        // Search
+        public async Task<List<Product>> SearchProductsAsync(string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+                return await GetAllProductsAsync();
 
-		public Product GetProductById(int id)
-		{
-			return _products.FirstOrDefault(p => p.Id == id);
-		}
+            return await _context.Products
+                .Where(p => p.Name.ToLower().Contains(keyword.ToLower()))
+                .ToListAsync();
+        }
 
-		
-		public void UpdateProduct(Product product)
-		{
-			var existing = GetProductById(product.Id);
-			if (existing != null)
-			{
-				existing.Name = product.Name;
-				existing.Price = product.Price;
-				existing.Description = product.Description;
-			}
-		}
+        // Get All
+        public async Task<List<Product>> GetAllProductsAsync()
+        {
+            return await _context.Products.ToListAsync();
+        }
 
-		public void DeleteProduct(int id)
-		{
-			var product = GetProductById(id);
-			if (product != null)
-			{
-				_products.Remove(product);
-			}
-		}
-	}
+        // Get By ID
+        public async Task<Product> GetProductByIdAsync(int id)
+        {
+            return await _context.Products.FindAsync(id);
+        }
+
+        // Create (بياخد DTO)
+        public async Task<Product> CreateProductAsync(ProductCreateDto dto)
+        {
+            var product = new Product
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                Price = dto.Price,
+                Category = dto.Category,
+                IsActive = true
+            };
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+            return product; // بنرجع الموديل عشان الفرونت إند يقراه
+        }
+
+        // Update (بياخد DTO)
+        public async Task<Product> UpdateProductAsync(int id, ProductCreateDto dto)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return null;
+
+            product.Name = dto.Name;
+            product.Description = dto.Description;
+            product.Price = dto.Price;
+            product.Category = dto.Category;
+
+            await _context.SaveChangesAsync();
+            return product;
+        }
+
+        // Delete
+        public async Task<bool> DeleteProductAsync(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return false;
+
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+    }
 }

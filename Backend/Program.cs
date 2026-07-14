@@ -1,12 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using TelecomProject.Data;
-using TelecomProject.Backend.Services; 
+using TelecomProject.services; // عشان يقرأ الـ ProductService
+using TelecomProject.Backend.Services; // عشان يقرأ الـ CustomerService والـ OrderService
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. تفعيل الـ Controllers ومنع مشكلة الـ Circular Reference
 builder.Services.AddControllers()
     .AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+    
+// تسجيل الـ ProductService
+builder.Services.AddScoped<ProductService>();
 
 // 2. ربط الـ AppDbContext بقاعدة بيانات PostgreSQL (Supabase)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -28,14 +32,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-
 // تسجيل الـ CustomerService
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 // تسجيل الـ OrderService
 builder.Services.AddScoped<IOrderService, OrderService>();
 
+
+builder.Services.AddScoped<AuditLogService>();
 
 var app = builder.Build();
 

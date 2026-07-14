@@ -1,91 +1,65 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
-using TelecomProject.Data; 
-using TelecomProject.Models;
-using TelecomProject.DTOs; 
+using TelecomProject.services; // مسار الـ Service
+using TelecomProject.DTOs;
 
-namespace TelecomProject.Backend.Controllers
+namespace TelecomProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly AppDbContext _context;
-       // search bar
-        [HttpGet("search")]
-        public IActionResult Search(string keyword)
+        private readonly ProductService _productService;
+
+        // بنعمل Inject للـ Service مش للـ DbContext
+        public ProductsController(ProductService productService)
         {
-            var results = _productService.SearchProducts(keyword);
+            _productService = productService;
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string keyword)
+        {
+            var results = await _productService.SearchProductsAsync(keyword);
             return Ok(results);
         }
 
-        public ProductsController(AppDbContext context)
-        {
-            _context = context;
-        }
-
-        // GET: عرض كل الباقات المتاحة
         [HttpGet]
         public async Task<IActionResult> GetProducts()
         {
-            var products = await _context.Products.ToListAsync();
+            var products = await _productService.GetAllProductsAsync();
             return Ok(products);
         }
 
-        // GET: عرض تفاصيل باقة معينة بالـ ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null) return NotFound("Product not found");
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product == null) return NotFound(new { message = "Product not found" });
             return Ok(product);
         }
 
-        // POST: إضافة باقة جديدة للسيستم باستخدام الـ DTO
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] ProductCreateDto dto)
         {
-            var product = new Product
-            {
-                Name = dto.Name,
-                Description = dto.Description,
-                Price = dto.Price,
-                Category = dto.Category,
-                IsActive = true
-            };
-
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
+            var product = await _productService.CreateProductAsync(dto);
             return Ok(product);
         }
 
-        // PUT: تعديل بيانات الباقة باستخدام الـ DTO
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductCreateDto dto)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null) return NotFound("Product not found");
-
-            product.Name = dto.Name;
-            product.Description = dto.Description;
-            product.Price = dto.Price;
-            product.Category = dto.Category;
-
-            await _context.SaveChangesAsync();
+            var product = await _productService.UpdateProductAsync(id, dto);
+            if (product == null) return NotFound(new { message = "Product not found" });
             return Ok(product);
         }
 
-        // DELETE: مسح باقة من السيستم
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null) return NotFound("Product not found");
-
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
-            return Ok("Product Deleted");
+            var success = await _productService.DeleteProductAsync(id);
+            if (!success) return NotFound(new { message = "Product not found" });
+            return Ok(new { message = "Product Deleted" });
         }
     }
 }
