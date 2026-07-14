@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema; // ضفنا السطر ده
 
 namespace TelecomProject.Models
+    namespace Backend.Models
 {
     public class Product
     {
