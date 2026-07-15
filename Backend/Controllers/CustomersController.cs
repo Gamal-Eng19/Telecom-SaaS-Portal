@@ -13,7 +13,7 @@ namespace TelecomProject.Backend.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly ICustomerService _customerService;
-        private readonly AppDbContext _context; // بنستخدمه مؤقتاً للدوال اللي لسه متعملهاش Service
+        private readonly AppDbContext _context; // بنستخدمه مؤقتاً لدالة GetCustomer لحد ما تتنقل للـ Service
 
         public CustomersController(ICustomerService customerService, AppDbContext context)
         {
@@ -21,12 +21,12 @@ namespace TelecomProject.Backend.Controllers
             _context = context;
         }
 
-        // GET: api/customers (بيدعم البحث والصفحات)
+        // GET: api/customers
         [HttpGet]
         public async Task<IActionResult> GetCustomers([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] string? sortBy = "Id")
         {
             if (page < 1) page = 1;
-            if (pageSize < 1 || pageSize > 100) pageSize = 10; // حماية بسيطة من قيم غير منطقية
+            if (pageSize < 1 || pageSize > 100) pageSize = 10; 
 
             var result = await _customerService.GetCustomersAsync(page, pageSize, search, sortBy);
             return Ok(result);
@@ -37,7 +37,6 @@ namespace TelecomProject.Backend.Controllers
         public async Task<IActionResult> GetCustomer(int id)
         {
             var customer = await _context.Customers.FindAsync(id);
-            // لو العميل ممسوح (Soft Delete) مش هنرجعه
             if (customer == null || customer.IsDeleted) return NotFound("Customer not found");
             return Ok(customer);
         }
@@ -51,7 +50,6 @@ namespace TelecomProject.Backend.Controllers
 
             var customer = await _customerService.CreateCustomerAsync(dto);
 
-            // 201 Created + Location header بدل ما نرجع 200 على إنشاء مورد جديد
             return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
         }
 
@@ -62,29 +60,20 @@ namespace TelecomProject.Backend.Controllers
             if (dto == null) return BadRequest("Request body is required");
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null || customer.IsDeleted) return NotFound("Customer not found");
-
-            customer.FullName = dto.FullName;
-            customer.PhoneNumber = dto.PhoneNumber;
-            customer.Email = dto.Email;
-            customer.Address = dto.Address;
-            customer.Type = dto.Type;
-
             try
             {
-                await _context.SaveChangesAsync();
+                // ⚠️ التعديل الجذري: خلينا الكنترولر يكلم السيرفيس اللي صلحناها، بدل ما يعتمد على نفسه
+                var updatedCustomer = await _customerService.UpdateCustomerAsync(id, dto);
+
+                if (updatedCustomer == null) 
+                    return NotFound("Customer not found or already deleted");
+
+                return Ok(updatedCustomer);
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                return Conflict("Customer was modified or deleted by another request");
-            }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
                 return StatusCode(500, $"Error updating customer: {ex.Message}");
             }
-
-            return Ok(customer);
         }
 
         // DELETE: api/customers/5 (Soft Delete)

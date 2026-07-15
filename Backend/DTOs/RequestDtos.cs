@@ -11,6 +11,7 @@ namespace TelecomProject.DTOs
         public string Email { get; set; }
         public string? Address { get; set; } // إضافة جديدة
         public CustomerType Type { get; set; } // إضافة جديدة
+        public decimal Balance { get; set; }
     }
 
     public class CustomerUpdateDto
@@ -20,6 +21,7 @@ namespace TelecomProject.DTOs
         public string Email { get; set; }
         public string? Address { get; set; }
         public CustomerType Type { get; set; }
+        public decimal Balance { get; set; }
     }
 
     // ===================== المنتجات (الباقات القديمة) =====================

@@ -13,6 +13,7 @@ namespace TelecomProject.Backend.Services
     {
         Task<object> GetCustomersAsync(int page, int pageSize, string? search, string? sortBy);
         Task<Customer> CreateCustomerAsync(CustomerCreateDto dto);
+        Task<Customer> UpdateCustomerAsync(int id, CustomerUpdateDto dto); // 👈 السطر ده انضاف
         Task<bool> SoftDeleteCustomerAsync(int id);
     }
 
@@ -50,15 +51,13 @@ namespace TelecomProject.Backend.Services
             {
                 "name" => query.OrderBy(c => c.FullName),
                 "email" => query.OrderBy(c => c.Email),
-                _ => query.OrderBy(c => c.Id)
+                _ => query.OrderByDescending(c => c.Id) // رتبنا من الأحدث للأقدم
             };
 
             // حسابات الصفحات (Pagination)
             var totalCount = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            // لو المستخدم عمل بحث جديد والصفحة القديمة بقت أكبر من عدد الصفحات المتاحة
-            // (مثلاً كان في صفحة 3 وبعد البحث بقى في صفحة واحدة بس) - نرجعه لصفحة صحيحة
             if (page > totalPages)
             {
                 page = totalPages == 0 ? 1 : totalPages;
@@ -84,7 +83,7 @@ namespace TelecomProject.Backend.Services
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            // تحقق من عدم تكرار العميل (نفس الرقم القومي أو الإيميل أو رقم الهاتف)
+            // تحقق من عدم تكرار العميل
             var duplicateExists = await _context.Customers.AnyAsync(c =>
                 !c.IsDeleted &&
                 ((dto.NationalId != null && c.NationalId == dto.NationalId) ||
@@ -102,6 +101,7 @@ namespace TelecomProject.Backend.Services
                 Email = dto.Email,
                 Address = dto.Address,
                 Type = dto.Type,
+                Balance = dto.Balance, // 👈 ضفنا الرصيد في الإنشاء
                 CreatedAt = DateTime.UtcNow,
                 IsDeleted = false
             };
@@ -111,14 +111,29 @@ namespace TelecomProject.Backend.Services
             return customer;
         }
 
+        // 👈 الدالة دي كانت ناقصة بالكامل، دي اللي بتعمل التعديل!
+        public async Task<Customer> UpdateCustomerAsync(int id, CustomerUpdateDto dto)
+        {
+            var customer = await _context.Customers.FindAsync(id);
+            if (customer == null || customer.IsDeleted) return null;
+
+            customer.FullName = dto.FullName;
+            customer.PhoneNumber = dto.PhoneNumber;
+            customer.Email = dto.Email;
+            customer.Address = dto.Address;
+            customer.Type = dto.Type;
+            customer.Balance = dto.Balance; // 👈 سطر الرصيد السحري
+
+            await _context.SaveChangesAsync();
+            return customer;
+        }
+
         public async Task<bool> SoftDeleteCustomerAsync(int id)
         {
             var customer = await _context.Customers.FindAsync(id);
-            // لو العميل مش موجود أو ممسوح قبل كده، رجع false
             if (customer == null || customer.IsDeleted) return false;
 
-            customer.IsDeleted = true; // مسح وهمي يحافظ على الداتا
-            // customer.DeletedAt = DateTime.UtcNow; // فك التعليق دي لو عندك عمود DeletedAt في الموديل
+            customer.IsDeleted = true; 
 
             await _context.SaveChangesAsync();
             return true;

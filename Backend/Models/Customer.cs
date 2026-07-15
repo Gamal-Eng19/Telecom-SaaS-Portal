@@ -20,6 +20,10 @@ namespace TelecomProject.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; } = false; 
+       
+       
+        [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(18,2)")]
+        public decimal Balance { get; set; } = 0;
 
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
     }

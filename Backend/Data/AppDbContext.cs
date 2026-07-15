@@ -14,5 +14,6 @@ namespace TelecomProject.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; } // إضافة DbSet للـ AuditLog
+        public DbSet<SupportTicket> SupportTickets { get; set; }
     }
 }
