@@ -1,4 +1,4 @@
-using TelecomProject.Models; // دي مهمة عشان الـ CustomerType
+using TelecomProject.Models;
 
 namespace TelecomProject.DTOs
 {
@@ -9,9 +9,10 @@ namespace TelecomProject.DTOs
         public string PhoneNumber { get; set; }
         public string NationalId { get; set; }
         public string Email { get; set; }
-        public string? Address { get; set; } // إضافة جديدة
-        public CustomerType Type { get; set; } // إضافة جديدة
+        public string? Address { get; set; } 
+        public CustomerType Type { get; set; } 
         public decimal Balance { get; set; }
+        public string? Password { get; set; } // ⚠️ إضافة الباسورد
     }
 
     public class CustomerUpdateDto
@@ -22,6 +23,7 @@ namespace TelecomProject.DTOs
         public string? Address { get; set; }
         public CustomerType Type { get; set; }
         public decimal Balance { get; set; }
+        public string? Password { get; set; } // ⚠️ إضافة الباسورد للتعديل
     }
 
     // ===================== المنتجات (الباقات القديمة) =====================
@@ -53,13 +55,30 @@ namespace TelecomProject.DTOs
         public int DataLimitGB { get; set; }
     }
 
+    public class AuditLogCreateDto
+    {
+        public string User { get; set; }
+        public string Role { get; set; }
+        public string Action { get; set; }
+        public string Details { get; set; }
+    }
     
-    public class AuditLogCreateDto 
-    { 
-        public string User { get; set; } 
-        public string Role { get; set; } 
-        public string Action { get; set; } 
-        public string Details { get; set; } 
+    // ===================== الـ Auth =====================
+    public class LoginDto
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class ForgotPasswordDto
+    {
+        public string Email { get; set; }
+    }
+
+    public class ResetPasswordDto
+    {
+        public string Email { get; set; }
+        public string Token { get; set; }
+        public string NewPassword { get; set; }
     }
 }
-

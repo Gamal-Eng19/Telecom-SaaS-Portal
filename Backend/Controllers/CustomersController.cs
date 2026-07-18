@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
 using TelecomProject.Backend.Services;
-using TelecomProject.Data;
 using TelecomProject.DTOs;
 
 namespace TelecomProject.Backend.Controllers
@@ -13,61 +11,68 @@ namespace TelecomProject.Backend.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly ICustomerService _customerService;
-        private readonly AppDbContext _context; // بنستخدمه مؤقتاً لدالة GetCustomer لحد ما تتنقل للـ Service
 
-        public CustomersController(ICustomerService customerService, AppDbContext context)
+        public CustomersController(ICustomerService customerService)
         {
             _customerService = customerService;
-            _context = context;
         }
 
-        // GET: api/customers
+        // ==========================================
+        // 1. CRUD Endpoints
+        // ==========================================
+
         [HttpGet]
         public async Task<IActionResult> GetCustomers([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] string? sortBy = "Id")
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1 || pageSize > 100) pageSize = 10; 
-
             var result = await _customerService.GetCustomersAsync(page, pageSize, search, sortBy);
             return Ok(result);
         }
 
-        // GET: api/customers/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
-            if (customer == null || customer.IsDeleted) return NotFound("Customer not found");
+            var customer = await _customerService.GetCustomerByIdAsync(id);
+            if (customer == null) 
+                return NotFound("Customer not found");
+                
             return Ok(customer);
         }
 
-        // POST: api/customers
         [HttpPost]
         public async Task<IActionResult> CreateCustomer([FromBody] CustomerCreateDto dto)
         {
-            if (dto == null) return BadRequest("Request body is required");
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var customer = await _customerService.CreateCustomerAsync(dto);
-
-            return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
-        }
-
-        // PUT: api/customers/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerUpdateDto dto)
-        {
-            if (dto == null) return BadRequest("Request body is required");
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (dto == null) 
+                return BadRequest("Request body is required");
+                
+            if (!ModelState.IsValid) 
+                return BadRequest(ModelState);
 
             try
             {
-                // ⚠️ التعديل الجذري: خلينا الكنترولر يكلم السيرفيس اللي صلحناها، بدل ما يعتمد على نفسه
-                var updatedCustomer = await _customerService.UpdateCustomerAsync(id, dto);
+                var customer = await _customerService.CreateCustomerAsync(dto);
+                return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerUpdateDto dto)
+        {
+            if (dto == null) 
+                return BadRequest("Request body is required");
+                
+            if (!ModelState.IsValid) 
+                return BadRequest(ModelState);
+
+            try
+            {
+                var updatedCustomer = await _customerService.UpdateCustomerAsync(id, dto);
                 if (updatedCustomer == null) 
                     return NotFound("Customer not found or already deleted");
-
+                    
                 return Ok(updatedCustomer);
             }
             catch (Exception ex)
@@ -76,14 +81,66 @@ namespace TelecomProject.Backend.Controllers
             }
         }
 
-        // DELETE: api/customers/5 (Soft Delete)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
             var success = await _customerService.SoftDeleteCustomerAsync(id);
-            if (!success) return NotFound("Customer not found or already deleted");
-
+            if (!success) 
+                return NotFound("Customer not found or already deleted");
+                
             return Ok("Customer Deleted Successfully");
+        }
+
+        // ==========================================
+        // 2. Authentication Endpoints
+        // ==========================================
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            try
+            {
+                var customer = await _customerService.LoginAsync(dto);
+                return Ok(customer);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+        }
+
+        [HttpGet("verify")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string email, [FromQuery] string token)
+        {
+            var isVerified = await _customerService.VerifyEmailAsync(email, token);
+            if (!isVerified) 
+                return BadRequest("Invalid verification link or email.");
+
+            return Ok("Account Verified Successfully. You can now login.");
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            if (string.IsNullOrEmpty(dto.Email))
+                return BadRequest("Email is required.");
+
+            await _customerService.ForgotPasswordAsync(dto.Email);
+            // دايماً بنرجع Ok لأسباب أمنية عشان منأكدش إذا كان الإيميل موجود في الداتا بيز ولا لأ
+            return Ok("If the email exists, a reset link has been sent.");
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _customerService.ResetPasswordAsync(dto);
+            if (!result) 
+                return BadRequest("Invalid or expired token.");
+            
+            return Ok("Password reset successfully.");
         }
     }
 }

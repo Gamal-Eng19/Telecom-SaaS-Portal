@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TelecomProject.Data;
-using TelecomProject.services; // عشان يقرأ الـ ProductService
-using TelecomProject.Backend.Services; // عشان يقرأ الـ CustomerService والـ OrderService
+using TelecomProject.services; 
+using TelecomProject.Backend.Services; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,24 +21,20 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        // حطينا بورت 3000 و 5173 عشان دول أشهر بورتات لـ React و Vite
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
-// 4. تفعيل Swagger (واجهة ممتازة عشان نجرب منها الـ APIs بتاعتنا)
+// 4. تفعيل Swagger 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// تسجيل الـ CustomerService
+// ⚠️ تسجيل السيرفيسز الأساسية + الإيميل سيرفيس الجديدة
+builder.Services.AddScoped<IEmailService, EmailService>(); // ضفنا سطر الإيميل
 builder.Services.AddScoped<ICustomerService, CustomerService>();
-
-// تسجيل الـ OrderService
 builder.Services.AddScoped<IOrderService, OrderService>();
-
-
 builder.Services.AddScoped<AuditLogService>();
 
 var app = builder.Build();
@@ -47,9 +43,15 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// هنشغل الـ HTTPS Redirection في الـ Production بس
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-// تفعيل استخدام الـ CORS اللي عملناه فوق
+app.UseRouting();
+
+// تفعيل استخدام الـ CORS 
 app.UseCors("AllowReactApp");
 
 app.UseAuthorization();
