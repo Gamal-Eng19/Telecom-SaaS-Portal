@@ -185,7 +185,7 @@ namespace TelecomProject.Backend.Services
 
             try
             {
-                string resetLink = $"http://localhost:5173/?mode=reset&email={customer.Email}&token={customer.ResetPasswordToken}";
+                string resetLink = $"http://localhost:5000/?mode=reset&email={customer.Email}&token={customer.ResetPasswordToken}";
                 string body = $@"
                     <div style='font-family: Arial, sans-serif; text-align: center; color: #333;'>
                         <h2 style='color: #4F46E5;'>Password Reset Request</h2>

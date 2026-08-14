@@ -440,7 +440,7 @@ function App() {
 
   // ================= 3. SAFE FETCH DATA =================
   const fetchCustomers = () => {
-    fetch(`http://localhost:5000/api/Customers?page=${customerPage}&search=${encodeURIComponent(customerSearch)}`, { cache: 'no-store' })
+    fetch(`/api/Customers?page=${customerPage}&search=${encodeURIComponent(customerSearch)}`, { cache: 'no-store' })
       .then(res => res.ok ? res.json() : Promise.reject('Failed to fetch customers'))
       .then(result => {
         setCustomers(Array.isArray(result) ? result : (result?.data || []));
@@ -450,28 +450,28 @@ function App() {
   };
 
   const fetchProducts = () => {
-    fetch('http://localhost:5000/api/Products', { cache: 'no-store' })
+    fetch('/api/Products', { cache: 'no-store' })
       .then(res => res.ok ? res.json() : Promise.reject('Failed to fetch products'))
       .then(result => setProducts(Array.isArray(result) ? result : (result?.data || [])))
       .catch(err => console.error("Products API Error:", err));
   };
 
   const fetchOrders = () => {
-    fetch('http://localhost:5000/api/Orders', { cache: 'no-store' })
+    fetch('/api/Orders', { cache: 'no-store' })
       .then(res => res.ok ? res.json() : Promise.reject('Failed to fetch orders'))
       .then(result => setOrders(Array.isArray(result) ? result : (result?.data || [])))
       .catch(err => console.error("Orders API Error:", err));
   };
 
   const fetchAuditLogs = () => {
-    fetch('http://localhost:5000/api/AuditLogs', { cache: 'no-store' })
+    fetch('/api/AuditLogs', { cache: 'no-store' })
       .then(res => res.ok ? res.json() : Promise.reject('Failed to fetch logs'))
       .then(result => setAuditLogs(Array.isArray(result) ? result : (result?.data || [])))
       .catch(err => console.error("Audit API Error:", err));
   };
 
   const fetchSupportTickets = () => {
-    fetch('http://localhost:5000/api/SupportTickets', { cache: 'no-store' })
+    fetch('/api/SupportTickets', { cache: 'no-store' })
       .then(res => res.ok ? res.json() : Promise.reject('Failed to fetch tickets'))
       .then(result => setSupportTickets(Array.isArray(result) ? result : (result?.data || [])))
       .catch(err => console.error("Tickets API Error:", err));
@@ -510,7 +510,7 @@ function App() {
       action: action,
       details: details
     };
-    fetch('http://localhost:5000/api/AuditLogs', {
+    fetch('/api/AuditLogs', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     }).then(() => fetchAuditLogs()).catch(console.error);
   };
@@ -540,7 +540,7 @@ function App() {
 
     try {
       // 2. Send API Request for Customers
-      const response = await fetch('http://localhost:5000/api/Customers/login', {
+      const response = await fetch('/api/Customers/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email, password: password })
@@ -589,7 +589,7 @@ function App() {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     try {
-      await fetch('http://localhost:5000/api/Customers/forgot-password', {
+      await fetch('/api/Customers/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: forgotForm.email })
@@ -606,7 +606,7 @@ function App() {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/Customers/reset-password', {
+      const response = await fetch('/api/Customers/reset-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(resetForm)
@@ -724,7 +724,7 @@ function App() {
   const handleSaveCustomer = (e) => {
     e.preventDefault();
     const isEdit = customerForm.id !== null;
-    const url = isEdit ? `http://localhost:5000/api/Customers/${customerForm.id}` : 'http://localhost:5000/api/Customers';
+    const url = isEdit ? `/api/Customers/${customerForm.id}` : '/api/Customers';
     const method = isEdit ? 'PUT' : 'POST';
     const payload = { ...customerForm, type: parseInt(customerForm.type) || 0, balance: parseFloat(customerForm.balance) || 0 };
 
@@ -745,7 +745,7 @@ function App() {
   const handleDeleteCustomer = (id) => {
     const cust = customers.find(c => c.id === id);
     showConfirm(language === 'ar' ? 'هل أنت متأكد من رغبتك في حذف هذا العميل؟' : 'Are you sure you want to delete this customer?', () => {
-      fetch(`http://localhost:5000/api/Customers/${id}`, { method: 'DELETE' }).then(() => {
+      fetch(`/api/Customers/${id}`, { method: 'DELETE' }).then(() => {
         fetchCustomers();
         logAction('Delete Customer', `Removed customer: ${cust ? cust.fullName : id}`);
       }).catch(console.error);
@@ -755,7 +755,7 @@ function App() {
   const handleSaveProduct = (e) => {
     e.preventDefault();
     const isEdit = productForm.id !== null;
-    const url = isEdit ? `http://localhost:5000/api/Products/${productForm.id}` : 'http://localhost:5000/api/Products';
+    const url = isEdit ? `/api/Products/${productForm.id}` : '/api/Products';
     const method = isEdit ? 'PUT' : 'POST';
     const payload = { ...productForm, price: parseFloat(productForm.price) || 0 };
 
@@ -770,7 +770,7 @@ function App() {
   const handleDeleteProduct = (id) => {
     const prod = products.find(p => p.id === id);
     showConfirm(language === 'ar' ? 'هل أنت متأكد من رغبتك في حذف هذه الباقة؟' : 'Are you sure you want to delete this package?', () => {
-      fetch(`http://localhost:5000/api/Products/${id}`, { method: 'DELETE' }).then(() => {
+      fetch(`/api/Products/${id}`, { method: 'DELETE' }).then(() => {
         fetchProducts();
         logAction('Delete Package', `Removed package: ${prod ? prod.name : id}`);
       }).catch(console.error);
@@ -779,7 +779,7 @@ function App() {
 
   const handleCreateOrder = (e) => {
     e.preventDefault();
-    fetch('http://localhost:5000/api/Orders', {
+    fetch('/api/Orders', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customerId: parseInt(orderForm.customerId), productId: parseInt(orderForm.productId) })
     }).then(() => {
       fetchOrders();
@@ -792,7 +792,7 @@ function App() {
   };
 
   const handleUpdateOrderStatus = (id, newStatus) => {
-    fetch(`http://localhost:5000/api/Orders/${id}`, {
+    fetch(`/api/Orders/${id}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus })
     }).then(() => {
       fetchOrders();
@@ -802,7 +802,7 @@ function App() {
 
   const handleDeleteOrder = (id) => {
     showConfirm(language === 'ar' ? 'هل أنت متأكد من رغبتك في حذف هذا الطلب؟' : 'Are you sure you want to delete this order?', () => {
-      fetch(`http://localhost:5000/api/Orders/${id}`, { method: 'DELETE' }).then(() => {
+      fetch(`/api/Orders/${id}`, { method: 'DELETE' }).then(() => {
         fetchOrders();
         logAction('Delete Order', `Removed order #${id}`);
       }).catch(console.error);
@@ -814,7 +814,7 @@ function App() {
     if (!respondModal?.ticket?.id) return;
     const ticketId = respondModal.ticket.id;
     
-    fetch(`http://localhost:5000/api/SupportTickets/${ticketId}/respond`, {
+    fetch(`/api/SupportTickets/${ticketId}/respond`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ response: respondModal.responseText })
@@ -1058,7 +1058,7 @@ function App() {
 
       showConfirm(confirmMsg, async () => {
         try {
-          const orderResponse = await fetch('http://localhost:5000/api/Orders', {
+          const orderResponse = await fetch('/api/Orders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ customerId: parseInt(myCustomerId), productId: parseInt(productId) })
@@ -1070,7 +1070,7 @@ function App() {
           }
 
           const newBalance = walletBalance - selectedProduct.price;
-          await fetch(`http://localhost:5000/api/Customers/${myCustomerId}`, {
+          await fetch(`/api/Customers/${myCustomerId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1094,7 +1094,7 @@ function App() {
           setOrders(prev => [newOrder, ...prev]); 
           
           fetchCustomers();
-          fetch('http://localhost:5000/api/Orders', { cache: 'no-store' })
+          fetch('/api/Orders', { cache: 'no-store' })
             .then(res => res.json())
             .then(data => setOrders(Array.isArray(data) ? data : []))
             .catch(console.error);
@@ -1125,7 +1125,7 @@ function App() {
         password: settingsForm.newPassword 
       };
 
-      fetch(`http://localhost:5000/api/Customers/${myCustomerId}`, {
+      fetch(`/api/Customers/${myCustomerId}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       }).then(() => {
         fetchCustomers();
@@ -1146,7 +1146,7 @@ function App() {
         message: supportForm.message
       };
 
-      fetch('http://localhost:5000/api/SupportTickets', {
+      fetch('/api/SupportTickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -1889,6 +1889,7 @@ function App() {
                   <label htmlFor="oCustomer" className="block text-sm font-bold text-[#0B2052] mb-1">{t.customerLbl || t.customer}</label>
                   <select id="oCustomer" required className="w-full px-4 py-2.5 rounded-lg border border-gray-300 outline-none focus:ring-2 focus:ring-[#0062D1] text-sm bg-white font-medium cursor-pointer" value={orderForm.customerId} onChange={e => setOrderForm({...orderForm, customerId: e.target.value})}>
                     <option value="">{t.selectCust}</option>
+                    <option value="">{t.selectCust}</option>
                     {customers.map(c => <option key={c.id} value={c.id}>{c?.fullName || t.unknown}</option>)}
                   </select>
                 </div>
@@ -2078,7 +2079,7 @@ function App() {
                 </button>
 
                 <button onClick={() => {
-                  fetch('http://localhost:5000/api/AuditLogs/clear', { method: 'DELETE' })
+                  fetch('/api/AuditLogs/clear', { method: 'DELETE' })
                     .then(() => setAuditLogs([]))
                     .catch(console.error);
                 }} className="text-sm font-bold text-red-600 hover:text-red-800 bg-red-50 border border-red-100 px-4 py-2.5 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-red-600 whitespace-nowrap cursor-pointer">

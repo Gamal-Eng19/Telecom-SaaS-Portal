@@ -50,7 +50,7 @@ namespace TelecomProject.Controllers
             ticket.Status = "Resolved";
             await _context.SaveChangesAsync();
 
-            // === 📧 كود إرسال الإيميل الحقيقي للعميل ===
+            
             try
             {
                 var mailMessage = new MailMessage
@@ -65,7 +65,7 @@ namespace TelecomProject.Controllers
 
                 using var smtpClient = new SmtpClient("smtp.gmail.com", 587)
                 {
-                    // حط إيميلك تاني هنا، والباسورد بتاعه (يفضل App Password من إعدادات جوجل)
+                    
                     Credentials = new NetworkCredential("YOUR_EMAIL@gmail.com", "YOUR_GMAIL_APP_PASSWORD"),
                     EnableSsl = true
                 };
@@ -74,7 +74,7 @@ namespace TelecomProject.Controllers
             }
             catch (Exception ex)
             {
-                // لو الإيميل فشل (عشان محطيتش الباسورد لسه)، التذكرة هتتقفل عادي في السيستم 
+                
                 Console.WriteLine("Email failed to send: " + ex.Message);
             }
 

@@ -49,6 +49,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+// ==========================================
+// ⚠️ السطور الجديدة اللي اتضافت عشان الـ Deployment
+// بتخلي السيرفر يقدم ملفات الـ React اللي جوه فولدر wwwroot
+app.UseDefaultFiles(); 
+app.UseStaticFiles();
+// ==========================================
+
 app.UseRouting();
 
 // تفعيل استخدام الـ CORS 
@@ -57,5 +64,11 @@ app.UseCors("AllowReactApp");
 app.UseAuthorization();
 
 app.MapControllers();
+
+// ==========================================
+// ⚠️ السطر الجديد عشان الـ SPA (React) 
+// بيمنع ظهور صفحة 404 لو اليوزر عمل Refresh
+app.MapFallbackToFile("index.html");
+// ==========================================
 
 app.Run();
