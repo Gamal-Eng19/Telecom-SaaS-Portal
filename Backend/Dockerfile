@@ -1,17 +1,17 @@
-# 1. Build the application using .NET 8 SDK
+# 1. Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Copy everything and publish the specific project file
-COPY . ./
-RUN dotnet publish Backend.csproj -c Release -o /app/publish
+# Copy everything from current root directory (Backend folder)
+COPY . .
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/out
 
-# 2. Run the application using the lighter .NET Runtime
+# 2. Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app/publish .
+COPY --from=build /app/out .
 
-# Expose port and start
 EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
